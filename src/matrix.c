@@ -3,7 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-struct matrix *matrix_init(int n, int m, uint16_t *weights) {
+struct matrix *matrix_new(uint8_t n, uint8_t m) {
+  uint16_t *weights = calloc(n * m, sizeof(uint16_t));
+  
+  return matrix_from(n, m, weights);
+}
+
+struct matrix *matrix_from(uint8_t n, uint8_t m, uint16_t *weights) {
   assert(weights);
 
   struct matrix *res = malloc(sizeof(struct matrix));
@@ -43,8 +49,8 @@ bool matrix_equals(struct matrix *a, struct matrix *b) {
   assert(a->n == b->n);
   assert(a->weights && b->weights);
 
-  int n = a->n;
-  int m = a->m;
+  uint8_t n = a->n;
+  uint8_t m = a->m;
 
   for (int i = 0; i<n; i++) {
     for (int j = 0; j<m; j++) {
@@ -59,11 +65,10 @@ bool matrix_equals(struct matrix *a, struct matrix *b) {
 void matrix_prettyprint(struct matrix *a) {
   assert(a && a->weights);
   for (int i = 0; i < a->n; i++) {
-    printf("| ");
+    printf("|\t");
     for (int j = 0; j < a->m; j++) {
       printf("%d", a->weights[i*a->n+j]);
-      if (j < a->m-1)
-        printf("\t");
+      printf("\t");
     }
     printf(" |\n");
   }

@@ -1,15 +1,15 @@
 #include "matrix.h"
 
-int main() {
-  int n = 4;
-  int m = 4;
+uint8_t main() {
+  uint8_t n = 4;
+  uint8_t m = 4;
   uint16_t weights[16] = {
                           1, 0, 0, 0,
                           0, 1, 0, 0,
                           0, 0, 1, 0,
                           0, 0, 0, 1
                         };
-  struct matrix *a = matrix_init(n, m, (uint16_t *)weights);
+  struct matrix *a = matrix_from(n, m, weights);
   matrix_prettyprint(a);
 
   uint16_t weights2[16] = {
@@ -18,6 +18,6 @@ int main() {
                           0, 8, 1, 0,
                           2, 0, 0, 1
                         };
-  a = matrix_init(n, m, (uint16_t *)weights2);
+  a = matrix_from(n, m, weights2);
   matrix_prettyprint(a);
 }
