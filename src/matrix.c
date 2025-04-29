@@ -1,15 +1,43 @@
 #include <matrix.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <stdio.h>
 
-struct matrix *matrix_init(int n, int m, float *weights) {
+struct matrix *matrix_init(int n, int m, uint16_t *weights) {
+  assert(weights);
 
+  struct matrix *res = malloc(sizeof(struct matrix));
+
+  res->n = n;
+  res->m = m;
+  res->weights = weights;
+  
+  return res;
 }
 
 struct matrix *matmult3x3(struct matrix *a, struct matrix *b, struct matrix *res) {
+  assert(a && b && res);
 
+  assert(a->m == b->m);
+  assert(a->n == b->n);
+  assert(a->n == res->n);
+  assert(a->m == res->m);
+
+  assert(a->n == 3);
+  assert(a->m == 3);
+  assert(a->weights && b->weights && res->weights);
+
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+      uint16_t resij = a->weights[i*3 + 0] * b->weights[0*3 + j] +
+                      a->weights[i*3 + 1] * b->weights[1*3 + j] +
+                      a->weights[i*3 + 2] * b->weights[2*3 + j];
+      res->weights[3*i + j] = resij;
+    }
+  }
 }
 
-bool equals(struct matrix *a, struct matrix *b) {
+bool matrix_equals(struct matrix *a, struct matrix *b) {
   assert(a && b);
   assert(a->m == b->m);
   assert(a->n == b->n);
@@ -26,4 +54,17 @@ bool equals(struct matrix *a, struct matrix *b) {
   }
 
   return true;
+}
+
+void matrix_prettyprint(struct matrix *a) {
+  assert(a && a->weights);
+  for (int i = 0; i < a->n; i++) {
+    printf("| ");
+    for (int j = 0; j < a->m; j++) {
+      printf("%d", a->weights[i*a->n+j]);
+      if (j < a->m-1)
+        printf("\t");
+    }
+    printf(" |\n");
+  }
 }
