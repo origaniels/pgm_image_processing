@@ -2,7 +2,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 
-/* ////////// READING ////////// */
+
+/* INTERNALS  */
 
 /*skips 0 or more whitespaces upcoming in the stream
   and returns the next non-whitespace character.*/
@@ -12,6 +13,7 @@ char skip_whitespaces(FILE *f) {
     c = fgetc(f);
   return c;
 }
+
 
 struct pgm *parse_header(FILE *f) {
   char c, _;
@@ -68,81 +70,8 @@ struct pgm *parse_header(FILE *f) {
   res->max_gray = max_gray;
 }
 
-void read_bytes_simple(FILE *f, struct pgm *image) {
-  image->rows = malloc(image->height * sizeof(uint16_t *));
-  for (int i = 0; i<image->height; i++) {
-    image->rows[i] = malloc(image->width * sizeof(uint16_t));
-    for (int j = 0; j<image->width; j++) {
-      image->rows[i][j] = fgetc(f);
-    }
-  }
-}
 
-
-void read_bytes_double(FILE *f, struct pgm *image) {
-  image->rows = malloc(image->height * sizeof(uint16_t *));
-  for (int i = 0; i<image->height; i++) {
-    image->rows[i] = malloc(image->width * sizeof(uint16_t));
-    for (int j = 0; j<image->width; j++) {
-      image->rows[i][j] = fgetc(f);
-      image->rows[i][j] <<= 8;
-      image->rows[i][j] += fgetc(f);
-    }
-  }
-}
-
-void fill_matrix(struct matrix *a, struct pgm *image) {
-  for (int i = 0; i<a->m; i++) {
-    for (int j = 0; j<a->n; j++) {
-      a->weights[i*a->n + j] = image->rows[i][j];
-    }
-  }
-}
-
-struct matrix *pgm_to_matrix(const char *filename) {
-  FILE *f = fopen(filename, "r");
-  if (!f) {
-    fprintf(stderr, "Could not open specified file: %s\n", filename);
-  }
-  
-  struct pgm *image = parse_header(f);
-  if (image->max_gray < 256) {
-    read_bytes_simple(f, image);
-  } else {
-    read_bytes_simple(f, image);
-  }
-  fclose(f);
-
-  struct matrix *res = matrix_new(image->width, image->height);
-
-  fill_matrix(res, image);
-
-  return res;
-}
-
-/* ////////// WRITING ////////// */
-
-struct pgm *matrix_to_struct_pgm(struct matrix *a) {
-  uint16_t width, height;
-  struct pgm *res = malloc(sizeof(struct pgm));
-
-  width = a->n;
-  height = a->m;
-
-  res->width = width;
-  res->height = height;
-  res->rows = malloc(res->height * sizeof(uint16_t *));
-  for (int i = 0; i<height; i++) {
-    res->rows[i] = malloc(res->width * sizeof(uint16_t));
-    for (int j = 0; j<width; j++) {
-      res->rows[i][j] = a->weights[i*width + j];
-    }
-  }
-
-  return res;
-}
-
-void write_header(FILE *f, uint16_t width, uint16_t height, uint16_t max_gray) {
+void write_header(FILE *f, struct pgm *image) {
   char swidth[6];
   char sheight[6];
   char smax_gray[6];
@@ -151,9 +80,9 @@ void write_header(FILE *f, uint16_t width, uint16_t height, uint16_t max_gray) {
   fputc('5', f);
   fputc('\n', f);
 
-  sprintf(swidth, "%d", width);
-  sprintf(sheight, "%d", height);
-  sprintf(smax_gray, "%d", max_gray);
+  sprintf(swidth, "%d", image->width);
+  sprintf(sheight, "%d", image->height);
+  sprintf(smax_gray, "%d", image->max_gray);
 
   fputs(swidth, f);
   fputc(' ', f);
@@ -182,12 +111,72 @@ void write_bytes_double(FILE *f, struct pgm *image) {
   }
 }
 
-void matrix_to_pgm(struct matrix *pixels, const char *filename, uint16_t max_gray) {
-  struct pgm *image = matrix_to_struct_pgm(pixels);
-  image->max_gray = max_gray;
-        
+void read_bytes_simple(FILE *f, struct pgm *image) {
+  image->rows = malloc(image->height * sizeof(uint16_t *));
+  for (int i = 0; i<image->height; i++) {
+    image->rows[i] = malloc(image->width * sizeof(uint16_t));
+    for (int j = 0; j<image->width; j++) {
+      image->rows[i][j] = fgetc(f);
+    }
+  }
+}
+
+
+void read_bytes_double(FILE *f, struct pgm *image) {
+  image->rows = malloc(image->height * sizeof(uint16_t *));
+  for (int i = 0; i<image->height; i++) {
+    image->rows[i] = malloc(image->width * sizeof(uint16_t));
+    for (int j = 0; j<image->width; j++) {
+      image->rows[i][j] = fgetc(f);
+      image->rows[i][j] <<= 8;
+      image->rows[i][j] += fgetc(f);
+    }
+  }
+}
+
+
+/* MATRIX/PGM INTERFACE */
+
+struct pgm *matrix_to_pgm(struct matrix *a, uint16_t max_gray) {
+  uint16_t width, height;
+  struct pgm *res = malloc(sizeof(struct pgm));
+
+  width = a->n;
+  height = a->m;
+
+  res->width = width;
+  res->height = height;
+  res->max_gray = max_gray;
+
+  res->rows = malloc(res->height * sizeof(uint16_t *));
+  for (int i = 0; i<height; i++) {
+    res->rows[i] = malloc(res->width * sizeof(uint16_t));
+    for (int j = 0; j<width; j++) {
+      res->rows[i][j] = a->weights[i*width + j];
+    }
+  }
+
+  return res;
+}
+
+struct matrix *pgm_to_matrix(struct pgm *image) {
+  struct matrix *res = matrix_new(image->width, image->height);
+
+  for (int i = 0; i<res->m; i++) {
+    for (int j = 0; j<res->n; j++) {
+      res->weights[i*res->n + j] = image->rows[i][j];
+    }
+  }
+
+  return res;
+}
+
+
+/* PGM/IMAGE INTERFACE */
+
+void pgm_to_image(struct pgm *image, const char *filename) {
   FILE *f = fopen(filename, "w");
-  write_header(f, image->width, image->height, image->max_gray);
+  write_header(f, image);
 
   if (image->max_gray<256) {
     write_bytes_simple(f, image);
@@ -195,4 +184,21 @@ void matrix_to_pgm(struct matrix *pixels, const char *filename, uint16_t max_gra
     write_bytes_double(f, image);
   }
   fclose(f);
+}
+
+struct pgm *image_to_pgm(const char *filename) {
+  FILE *f = fopen(filename, "r");
+  if (!f) {
+    fprintf(stderr, "Could not open specified file: %s\n", filename);
+  }
+  
+  struct pgm *image = parse_header(f);
+  if (image->max_gray < 256) {
+    read_bytes_simple(f, image);
+  } else {
+    read_bytes_simple(f, image);
+  }
+  fclose(f);
+
+  return image;
 }
