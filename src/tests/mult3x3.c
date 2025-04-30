@@ -2,9 +2,9 @@
 #include <assert.h>
 #include <stdio.h>
 
-uint8_t main() {
-  uint8_t n = 3;
-  uint8_t m = 3;
+uint16_t main() {
+  uint16_t n = 3;
+  uint16_t m = 3;
   uint16_t weights[9] = {
                           1, 2, 3,
                           3, 1, 2,

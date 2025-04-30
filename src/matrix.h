@@ -2,15 +2,17 @@
 #include <stdint.h>
 
 struct matrix {
-  uint8_t n;
-  uint8_t m;
+  // columns
+  uint16_t n;
+  // rows
+  uint16_t m;
 
   uint16_t *weights;
 };
 
-extern struct matrix *matrix_new(uint8_t n, uint8_t m);
+extern struct matrix *matrix_new(uint16_t n, uint16_t m);
 
-extern struct matrix *matrix_from(uint8_t n, uint8_t m, uint16_t *weights);
+extern struct matrix *matrix_from(uint16_t n, uint16_t m, uint16_t *weights);
 
 extern struct matrix *matmult3x3(struct matrix *a, struct matrix *b, struct matrix *res);
 
