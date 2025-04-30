@@ -1,6 +1,6 @@
 #include "matrix.h"
 
-uint16_t main() {
+int main() {
   uint16_t n = 4;
   uint16_t m = 4;
   uint16_t weights[16] = {

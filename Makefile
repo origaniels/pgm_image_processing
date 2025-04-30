@@ -1,12 +1,16 @@
 CFLAGS=-Isrc -g
 BIN=bin
 
+
+# libs
 matrix:
 	gcc $(CFLAGS) -c src/matrix.c -o $(BIN)/matrix.o
 
 pgm: 	matrix
 	gcc $(CFLAGS) -c src/pgm.c -o $(BIN)/pgm.o
 
+
+# tests
 print: 	matrix
 	gcc $(CFLAGS) src/tests/prettyprint.c $(BIN)/matrix.o -o $(BIN)/prettyprint
 
@@ -21,6 +25,11 @@ mult33: matrix
 
 equals: matrix
 	gcc $(CFLAGS) src/tests/equals.c $(BIN)/matrix.o -o $(BIN)/equals
+
+pad: matrix
+	gcc $(CFLAGS) src/tests/padding.c $(BIN)/matrix.o -o $(BIN)/padding
+
+
 
 all: 	matrix
 	gcc $(CFLAGS) src/main.c $(BIN)/matrix.o

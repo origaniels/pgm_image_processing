@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 struct matrix *matrix_new(uint16_t n, uint16_t m) {
   uint16_t *weights = calloc(n * m, sizeof(uint16_t));
@@ -71,5 +72,69 @@ void matrix_prettyprint(struct matrix *a) {
       printf("\t");
     }
     printf(" |\n");
+  }
+}
+
+/*  pads the input matrix to fit the shape extended by the provided padding.
+    padding copies the edge value. Padding is done on both sides symetrically. */
+struct matrix *pad_matrix(struct matrix *source_matrix, uint16_t n_padding, uint16_t m_padding) {
+  uint16_t n = source_matrix->n;
+  uint16_t m = source_matrix->m;
+  struct matrix *res = matrix_new(n + 2 * n_padding, m + 2 * m_padding);
+
+  /* fill inner values */
+  for (int i = m_padding; i<m_padding+m; i++) {
+    uint16_t *dst = &res->weights[i * res->n + n_padding];
+    uint16_t *src = &source_matrix->weights[(i-m_padding) * n];
+    memcpy(dst, src, n * sizeof(uint16_t));
+  }
+
+  /* do padding */
+  
+  /* corners */
+  fill_section(res, m_padding, n_padding, 0, 0, m_padding, n_padding); /* top left corner */
+
+  fill_section(res, m_padding, res->n-n_padding-1, 0, res->n-n_padding,
+              m_padding, res->n); /* top right corner */
+  
+  fill_section(res, res->m-m_padding-1, res->n-n_padding-1,
+              res->m-m_padding, res->n-n_padding, res->m, res->n); /* bottom right corner */
+  
+  fill_section(res, res->m-m_padding-1, n_padding, res->m-m_padding, 0,
+              res->m, n_padding); /* bottom left corner */
+  
+  /* edges */
+  /* top */
+  for (int j = n_padding; j<res->n-n_padding; j++) {
+    fill_section(res, m_padding, j, 0, j, m_padding, j+1);
+  }
+
+  /* bottom */
+  for (int j = n_padding; j<res->n-n_padding; j++) {
+    fill_section(res, res->m-m_padding-1, j, res->m-m_padding, j, res->m, j+1);
+  }
+
+  /* left */
+  for (int i = m_padding; i<res->m-m_padding; i++) {
+    fill_section(res, i, n_padding, i, 0, i+1, n_padding);
+  }
+
+  /* right */
+  for (int i = m_padding; i<res->m-m_padding; i++) {
+    fill_section(res, i, res->n-n_padding-1, i, res->n-n_padding, i+1, res->n);
+  }
+
+  return res;
+}
+
+/*  Fills the rectangular section of the matrix bound by i_start, j_start 
+    and i_end, j_end with the value at i_val, j_val.
+    *_end bounds are strict bounds. */
+inline void fill_section(struct matrix *m, int i_val, int j_val, int i_start, 
+                        int j_start, int i_end, int j_end) {
+  for (int i = i_start; i<i_end; i++) {
+    for (int j = j_start; j<j_end; j++) {
+      m->weights[i*m->n + j] = m->weights[i_val*m->n + j_val];
+    }
   }
 }
