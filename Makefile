@@ -1,6 +1,7 @@
-CFLAGS=-Isrc -g
+CFLAGS=-Isrc -O3 -g3 -fsanitize=signed-integer-overflow -lm 
 BIN=bin
 
+all: 	edge
 
 # libs
 matrix:
@@ -29,8 +30,18 @@ equals: matrix
 pad: matrix
 	gcc $(CFLAGS) src/tests/padding.c $(BIN)/matrix.o -o $(BIN)/padding
 
+extract: matrix
+	gcc $(CFLAGS) src/tests/extract_matrix_block.c $(BIN)/matrix.o -o $(BIN)/extract_matrix_block
 
+convolve: matrix
+	gcc $(CFLAGS) src/tests/convolve.c $(BIN)/matrix.o -o $(BIN)/convolve
 
-all: 	matrix
-	gcc $(CFLAGS) src/main.c $(BIN)/matrix.o
+convolve2d: matrix
+	gcc $(CFLAGS) src/tests/convolve2d.c $(BIN)/matrix.o -o $(BIN)/convolve2d
+
+blur: 	matrix pgm
+	gcc $(CFLAGS) src/blur.c $(BIN)/matrix.o $(BIN)/pgm.o
+
+edge: 	matrix pgm
+	gcc $(CFLAGS) src/edge_detect.c $(BIN)/matrix.o $(BIN)/pgm.o -o $(BIN)/edge_detect
 

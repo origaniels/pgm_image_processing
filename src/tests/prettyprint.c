@@ -3,7 +3,7 @@
 int main() {
   uint16_t n = 4;
   uint16_t m = 4;
-  uint16_t weights[16] = {
+  int32_t weights[16] = {
                           1, 0, 0, 0,
                           0, 1, 0, 0,
                           0, 0, 1, 0,
@@ -12,7 +12,7 @@ int main() {
   struct matrix *a = matrix_from(n, m, weights);
   matrix_prettyprint(a);
 
-  uint16_t weights2[16] = {
+  int32_t weights2[16] = {
                           1, 0, 0, 4,
                           0, 1, 6, 0,
                           0, 8, 1, 0,

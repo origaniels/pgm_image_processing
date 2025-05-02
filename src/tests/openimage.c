@@ -1,7 +1,7 @@
 #include "pgm.h"
 
 int main() {
-  const char *name = "images/circle.pgm";
+  const char *name = "images/bug.pgm";
 
   struct pgm *image = image_to_pgm(name);
   struct matrix *m = pgm_to_matrix(image);

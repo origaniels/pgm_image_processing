@@ -1,5 +1,4 @@
 #include "matrix.h"
-#include <assert.h>
 #include <stdio.h>
 
 int main() {
@@ -7,20 +6,18 @@ int main() {
   uint16_t m = 3;
   int32_t weights[9] = {
                           1, 2, 3,
-                          3, 1, 2,
-                          2, 3, 1
+                          4, 5, 6,
+                          7, 8, 9
                         };
   struct matrix *a = matrix_from(n, m, weights);
 
   int32_t weights2[9] = {
-                          1, 2, 4,
-                          8, 16, 32,
-                          64, 128, 255,
+                          0, 0, 1,
+                          0, 0, 0,
+                          0, 0, 0
                         };
   struct matrix *b = matrix_from(n, m, weights2);
 
-  
-  if (!matrix_equals(a, b))
-    if (matrix_equals(a, a))
-      printf("Success\n");
+  int32_t c = convolve(a, b);
+  printf("%d\n", c);
 }

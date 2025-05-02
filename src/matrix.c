@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 struct matrix *matrix_new(uint16_t n, uint16_t m) {
-  uint16_t *weights = calloc(n * m, sizeof(uint16_t));
+  int32_t *weights = calloc(n * m, sizeof(int32_t));
   
   return matrix_from(n, m, weights);
 }
 
-struct matrix *matrix_from(uint16_t n, uint16_t m, uint16_t *weights) {
+struct matrix *matrix_from(uint16_t n, uint16_t m, int32_t *weights) {
   assert(weights);
 
   struct matrix *res = malloc(sizeof(struct matrix));
@@ -36,7 +37,7 @@ struct matrix *matmult3x3(struct matrix *a, struct matrix *b, struct matrix *res
 
   for (int i = 0; i < 3; i++) {
     for (int j = 0; j < 3; j++) {
-      uint16_t resij = a->weights[i*3 + 0] * b->weights[0*3 + j] +
+      int32_t resij = a->weights[i*3 + 0] * b->weights[0*3 + j] +
                       a->weights[i*3 + 1] * b->weights[1*3 + j] +
                       a->weights[i*3 + 2] * b->weights[2*3 + j];
       res->weights[3*i + j] = resij;
@@ -84,57 +85,160 @@ struct matrix *pad_matrix(struct matrix *source_matrix, uint16_t n_padding, uint
 
   /* fill inner values */
   for (int i = m_padding; i<m_padding+m; i++) {
-    uint16_t *dst = &res->weights[i * res->n + n_padding];
-    uint16_t *src = &source_matrix->weights[(i-m_padding) * n];
-    memcpy(dst, src, n * sizeof(uint16_t));
+    int32_t *dst = &res->weights[i * res->n + n_padding];
+    int32_t *src = &source_matrix->weights[(i-m_padding) * n];
+    memcpy(dst, src, n * sizeof(int32_t));
   }
 
   /* do padding */
   
   /* corners */
-  fill_section(res, m_padding, n_padding, 0, 0, m_padding, n_padding); /* top left corner */
+  fill_section(res, m_padding, n_padding, 0, 0, n_padding, m_padding); /* top left corner */
 
   fill_section(res, m_padding, res->n-n_padding-1, 0, res->n-n_padding,
-              m_padding, res->n); /* top right corner */
+              n_padding, m_padding); /* top right corner */
   
   fill_section(res, res->m-m_padding-1, res->n-n_padding-1,
-              res->m-m_padding, res->n-n_padding, res->m, res->n); /* bottom right corner */
+              res->m-m_padding, res->n-n_padding, n_padding, m_padding); /* bottom right corner */
   
   fill_section(res, res->m-m_padding-1, n_padding, res->m-m_padding, 0,
-              res->m, n_padding); /* bottom left corner */
+    n_padding, m_padding); /* bottom left corner */
   
   /* edges */
   /* top */
   for (int j = n_padding; j<res->n-n_padding; j++) {
-    fill_section(res, m_padding, j, 0, j, m_padding, j+1);
+    fill_section(res, m_padding, j, 0, j, 1, m_padding);
   }
 
   /* bottom */
   for (int j = n_padding; j<res->n-n_padding; j++) {
-    fill_section(res, res->m-m_padding-1, j, res->m-m_padding, j, res->m, j+1);
+    fill_section(res, res->m-m_padding-1, j, res->m-m_padding, j, 1, m_padding);
   }
 
   /* left */
   for (int i = m_padding; i<res->m-m_padding; i++) {
-    fill_section(res, i, n_padding, i, 0, i+1, n_padding);
+    fill_section(res, i, n_padding, i, 0, n_padding, 1);
   }
 
   /* right */
   for (int i = m_padding; i<res->m-m_padding; i++) {
-    fill_section(res, i, res->n-n_padding-1, i, res->n-n_padding, i+1, res->n);
+    fill_section(res, i, res->n-n_padding-1, i, res->n-n_padding, n_padding, 1);
   }
 
   return res;
 }
 
 /*  Fills the rectangular section of the matrix bound by i_start, j_start 
-    and i_end, j_end with the value at i_val, j_val.
-    *_end bounds are strict bounds. */
+    and with size n_size, m_size with the value at i_val, j_val. */
 inline void fill_section(struct matrix *m, int i_val, int j_val, int i_start, 
-                        int j_start, int i_end, int j_end) {
-  for (int i = i_start; i<i_end; i++) {
-    for (int j = j_start; j<j_end; j++) {
+                        int j_start, int n_size, int m_size) {
+  for (int i = i_start; i<i_start+m_size; i++) {
+    for (int j = j_start; j<j_start+n_size; j++) {
       m->weights[i*m->n + j] = m->weights[i_val*m->n + j_val];
     }
   }
+}
+
+struct matrix *extract_matrix_block(struct matrix *source_matrix, int start_i, 
+                                  int start_j, int n_size, int m_size) {
+    assert(start_i+m_size <= source_matrix->m);
+    assert(start_j+n_size <= source_matrix->n);
+
+    int32_t *weights = malloc(m_size * n_size * sizeof(int32_t));
+    int bloc_i = 0;
+    for (int i = start_i; i<start_i+m_size; i++) {
+      int bloc_j = 0;
+      for (int j = start_j; j<start_j+n_size; j++) {
+        weights[bloc_i*n_size + bloc_j] = source_matrix->weights[i*source_matrix->n+j];
+        bloc_j++;
+      }
+      bloc_i++;
+    }
+    struct matrix *res = matrix_from(n_size, m_size, weights);
+    return res;
+}
+
+int32_t matrix_dot(struct matrix *a, struct matrix *b) {
+  assert(a && b);
+
+  assert(a->m == b->m);
+  assert(a->n == b->n);
+
+  assert(a->weights && b->weights);
+
+  int32_t res = 0;
+  for (int i = 0; i<a->m; i++) {
+    for (int j = 0; j<a->n; j++) {
+      res += a->weights[i*a->n + j] * b->weights[i*a->n + j];
+    }
+  }
+
+  return res;
+}
+
+int32_t convolve(struct matrix *a, struct matrix *b) {
+  assert(a && b);
+
+  assert(a->m == b->m);
+  assert(a->n == b->n);
+
+  assert(a->weights && b->weights);
+
+  int32_t res = 0;
+  for (int i = 0; i<a->m; i++) {
+    for (int j = 0; j<a->n; j++) {
+      res += a->weights[i*a->n + j] * b->weights[(a->m-i-1)*a->n + (a->n-j-1)];
+    }
+  }
+  return res;
+}
+
+/*  performs the 2D convolution on matrix a by kernel.
+    kernel is slid over a and performs matrix convolution on each
+    sub_block of a. */
+struct matrix *convolve2d(struct matrix *a, struct matrix *kernel) {
+  /* expand a to fit the kernel everywhere */
+  uint16_t n_padding = kernel->n / 2;
+  uint16_t m_padding = kernel->m / 2;
+  struct matrix *padded_a = pad_matrix(a, n_padding, m_padding);
+
+  struct matrix *res = matrix_new(a->n, a->m);
+  for (int i = 0; i<res->m; i++) {
+    for (int j = 0; j<res->n; j++) {
+      struct matrix *block = extract_matrix_block(padded_a, i, j, kernel->n, kernel->m);
+      res->weights[i*res->n + j] = convolve(block, kernel);
+    }
+  }
+  return res;
+}
+
+struct matrix *matrix_abs(struct matrix *source, bool in_place) {
+  struct matrix *res;
+  if (in_place) {
+    res = source;
+  } else {
+    res = matrix_new(source->n ,source->m);
+  }
+
+  for (int i = 0; i<source->m; i++) {
+    for (int j = 0; j<source->n; j++) {
+      res->weights[i*source->n + j] = abs(source->weights[i*source->n + j]);
+    }
+  }
+  return res;
+}
+
+struct matrix *pythagore_add(struct matrix *a, struct matrix *b) {
+  assert(a->n==b->n);
+  assert(a->m==b->m);
+  struct matrix *res = matrix_new(a->n, a->m);
+
+  for (int i = 0; i<a->m; i++) {
+    for (int j = 0; j<a->n; j++) {
+      int aij = a->weights[i*a->n+j];
+      int bij = b->weights[i*a->n+j];
+      res->weights[i*a->n+j] = (int16_t)sqrt(aij * aij + bij * bij);
+    }
+  }
+  return res;
 }

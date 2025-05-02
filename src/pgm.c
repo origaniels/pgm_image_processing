@@ -24,9 +24,9 @@ struct pgm *parse_header(FILE *f) {
   char sheight[6];
   char smax_gray[6];
 
-  while (!isspace(c)) {
+  do {
     c = fgetc(f);
-  }
+  } while (!isspace(c));
   c = skip_whitespaces(f);
 
   // parse width
@@ -68,6 +68,7 @@ struct pgm *parse_header(FILE *f) {
   res->height = height;
   res->width = width;
   res->max_gray = max_gray;
+  return res;
 }
 
 
