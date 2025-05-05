@@ -193,6 +193,25 @@ int32_t convolve(struct matrix *a, struct matrix *b) {
   return res;
 }
 
+int32_t convolve_without_padding(struct matrix *a, struct matrix *b) {
+  assert(a && b);
+
+  assert(a->m == b->m);
+  assert(a->n == b->n);
+
+  assert(a->weights && b->weights);
+
+  int32_t res = 0;
+  for (int i = 0; i<a->m; i++) {
+    for (int j = 0; j<a->n; j++) {
+      uint16_t a_idx = i*a->n + j;
+      uint16_t b_idx = (a->m-i-1)*a->n + (a->n-j-1);
+      res += a->weights[a_idx] * b->weights[b_idx];
+    }
+  }
+  return res;
+}
+
 /*  performs the 2D convolution on matrix a by kernel.
     kernel is slid over a and performs matrix convolution on each
     sub_block of a. */
@@ -209,6 +228,65 @@ struct matrix *convolve2d(struct matrix *a, struct matrix *kernel) {
       res->weights[i*res->n + j] = convolve(block, kernel);
     }
   }
+  return res;
+}
+
+/*  Processes the 2dconvolution of matrix a by the provided kernel. 
+    Processing is done block by block according to the sizes provided. */
+struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint16_t block_size_n, uint16_t block_size_m) {
+  /* expand a to fit the kernel everywhere */
+  uint16_t n_padding = kernel->n / 2;
+  uint16_t m_padding = kernel->m / 2;
+  struct matrix *padded_a = pad_matrix(a, n_padding, m_padding);
+
+  struct matrix *res = matrix_new(a->n, a->m);
+
+  uint16_t num_blocks_n = a->n/block_size_n;
+  uint16_t num_blocks_m = a->m/block_size_m;
+
+  /* If there is a remainder, add an extra block. */
+  uint16_t rem_n = a->n % block_size_n;
+  uint16_t rem_m = a->m % block_size_m;
+  if (rem_n) {
+    num_blocks_n++;
+  }
+  if (rem_m) {
+    num_blocks_m++;
+  }
+
+  for (int I = 0; I<num_blocks_m; I++) {
+    uint16_t cur_block_size_m = block_size_m;
+    if (I==num_blocks_m-1) {
+      cur_block_size_m = rem_m;
+    }
+    uint16_t padded_block_size_m = cur_block_size_m + 2 * m_padding;
+
+    for (int J = 0; J<num_blocks_n; J++) {
+      uint16_t cur_block_size_n = block_size_n;
+      if (J==num_blocks_n-1) {
+        cur_block_size_n = rem_n;
+      }
+
+      uint16_t padded_block_size_n = cur_block_size_n + 2 * n_padding;
+
+      struct matrix *block = extract_matrix_block(padded_a, I * block_size_m, J * block_size_n, padded_block_size_n, padded_block_size_m);
+      
+      uint16_t i_upperbound = cur_block_size_m;
+      for (int i = 0; i < i_upperbound; i++) {
+        uint16_t j_upperbound = cur_block_size_n;
+
+        for (int j = 0; j < j_upperbound; j++) {
+          struct matrix *inner_block = extract_matrix_block(block, i, j, kernel->n, kernel->m);
+
+          uint16_t res_i = I * block_size_m + i;
+          uint16_t res_j = J * block_size_n + j;
+
+          res->weights[res_i*res->n + res_j] = convolve(inner_block, kernel);
+        }
+      }
+    }
+  }
+
   return res;
 }
 

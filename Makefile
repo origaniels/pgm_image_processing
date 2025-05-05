@@ -1,4 +1,4 @@
-CFLAGS=-Isrc -O3 -g3 -fsanitize=signed-integer-overflow -lm 
+CFLAGS=-Isrc -O0 -g3 -fsanitize=signed-integer-overflow -lm 
 BIN=bin
 
 all: 	edge

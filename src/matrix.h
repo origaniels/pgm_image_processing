@@ -26,6 +26,8 @@ extern int32_t convolve(struct matrix *a, struct matrix *b);
 
 extern struct matrix *convolve2d(struct matrix *a, struct matrix *kernel);
 
+extern struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint16_t block_size_n, uint16_t block_size_m);
+
 extern struct matrix *pad_matrix(struct matrix *source_matrix, uint16_t n_padding, uint16_t m_padding);
 
 extern struct matrix *extract_matrix_block(struct matrix *source_matrix, int start_i, 
