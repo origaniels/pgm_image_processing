@@ -1,10 +1,13 @@
-#include "pgm.h"
+#include "include/pgm.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 
 #define NUM_FILTERS 3
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE 200
+#endif
 
 enum filter_type {
   SOBEL,
@@ -12,7 +15,7 @@ enum filter_type {
   LAPLACIAN_5X5,
 };
 
-enum filter_type filter = SOBEL;
+enum filter_type filter = LAPLACIAN_3X3;
 
 int32_t sobel_w_h[9] = {
   1, 0, -1,
@@ -58,8 +61,8 @@ void edge_detect(const char *file_in, const char *file_out, enum filter_type typ
 
       struct matrix *kernel_sobel_v = matrix_from(3, 3, sobel_w_v);
 
-      struct matrix *convoled_m_v = convolve2d(m, kernel_sobel_v);
-      struct matrix *convoled_m_h = convolve2d(m, kernel_sobel_h);
+      struct matrix *convoled_m_v = convolve2d_blocked(m, kernel_sobel_v, BLOCK_SIZE, BLOCK_SIZE);
+      struct matrix *convoled_m_h = convolve2d_blocked(m, kernel_sobel_h, BLOCK_SIZE, BLOCK_SIZE);
       convoled_m = pythagore_add(convoled_m_v, convoled_m_h);
       inflate_rate = 4;
       break;
@@ -72,7 +75,7 @@ void edge_detect(const char *file_in, const char *file_out, enum filter_type typ
       break;
     case LAPLACIAN_3X3:
       kernel = matrix_from(3, 3, laplacian_w_3x3);
-      convoled_m = convolve2d(m, kernel);
+      convoled_m = convolve2d_blocked(m, kernel, BLOCK_SIZE, BLOCK_SIZE);
       convoled_m = matrix_abs(convoled_m, true);
 
       inflate_rate = 4;
@@ -83,7 +86,7 @@ void edge_detect(const char *file_in, const char *file_out, enum filter_type typ
 
   end = clock() / (CLOCKS_PER_SEC / 1000);
   dif = end-start;
-  printf ("convolution took %ldms\n", dif );
+  printf ("%ld\n", dif );
 
   struct pgm *image_edges = matrix_to_pgm(convoled_m, inflate_rate * image->max_gray);
   pgm_to_image(image_edges, file_out);
