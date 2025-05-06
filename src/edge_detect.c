@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
 
 #define NUM_FILTERS 3
 #ifndef BLOCK_SIZE
@@ -48,10 +48,10 @@ void edge_detect(const char *file_in, const char *file_out, enum filter_type typ
   struct pgm *image = image_to_pgm(file_in);
   struct matrix *m = pgm_to_matrix(image);
   
-  clock_t start,end;
+  struct timeval start,end;
   long dif;
 
-  start = clock() / (CLOCKS_PER_SEC / 1000);
+  gettimeofday(&start, NULL);
 
   struct matrix *convoled_m, *kernel;
   uint8_t inflate_rate = 1;
@@ -84,9 +84,9 @@ void edge_detect(const char *file_in, const char *file_out, enum filter_type typ
       break;
   }
 
-  end = clock() / (CLOCKS_PER_SEC / 1000);
-  dif = end-start;
-  printf ("%ld\n", dif );
+  gettimeofday(&end, NULL);
+  dif = (end.tv_usec/1000 + end.tv_sec*1000) - (start.tv_usec/1000 + start.tv_sec*1000);
+  printf ("%ld\n", dif);
 
   struct pgm *image_edges = matrix_to_pgm(convoled_m, inflate_rate * image->max_gray);
   pgm_to_image(image_edges, file_out);
