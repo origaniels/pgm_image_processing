@@ -224,6 +224,8 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
   uint16_t num_blocks_n = a->n/block_size_n;
   uint16_t num_blocks_m = a->m/block_size_m;
 
+
+
   /* If there is a remainder, add an extra block. */
   uint16_t rem_n = a->n % block_size_n;
   uint16_t rem_m = a->m % block_size_m;
@@ -234,33 +236,38 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
     num_blocks_m++;
   }
 
+  uint32_t weights_to_allocate = a->m * a->n + num_blocks_m * num_blocks_n * 2 * m_padding * 2 * n_padding;
+
   struct matrix *blocks = malloc(num_blocks_m * num_blocks_n * sizeof(struct matrix));
-  int32_t *blocks_weights = malloc(((num_blocks_m - 1) * (num_blocks_n - 1)
-                                   * (block_size_m + 2 * m_padding)
-                                   * (block_size_n + 2 * n_padding)
-                                   + num_blocks_n * (rem_m + 2 * m_padding) 
-                                   + num_blocks_m * (rem_n + 2 * n_padding)
-                                  ) * sizeof(int32_t));
+  int32_t *blocks_weights = malloc(weights_to_allocate * sizeof(int32_t));
 
   for (int I = 0; I<num_blocks_m; I++) {
     uint16_t cur_block_size_m = block_size_m;
-    if (I==num_blocks_m-1) {
+    if (rem_m && I==num_blocks_m-1) {
       cur_block_size_m = rem_m;
     }
     uint16_t padded_block_size_m = cur_block_size_m + 2 * m_padding;
 
     for (int J = 0; J<num_blocks_n; J++) {
       uint16_t cur_block_size_n = block_size_n;
-      if (J==num_blocks_n-1) {
-        cur_block_size_n = rem_n;
+      int block_start_i = I * block_size_m;
+      /* multiply block_start_i by the j-length of a line. */
+      if (rem_n) {
+        block_start_i *= (num_blocks_n-1) * block_size_n + rem_n;
+        if (J==num_blocks_n-1) {
+          cur_block_size_n = rem_n;
+  
+        }
+      } else {
+        block_start_i *= num_blocks_n * block_size_n;
       }
-
+      int block_start_j = J * block_size_n;
       uint16_t padded_block_size_n = cur_block_size_n + 2 * n_padding;
 
       struct matrix *block = extract_matrix_block_pad(a, I * block_size_m-m_padding, J * block_size_n-n_padding,
                                                      padded_block_size_n, padded_block_size_m,
                                                      &blocks[I * num_blocks_n +J], 
-                                                     &blocks_weights[I * num_blocks_n * block_size_m + J * block_size_n]);
+                                                     &blocks_weights[block_start_i+block_start_j]);
       
       uint16_t i_upperbound = cur_block_size_m;
       for (int i = 0; i < i_upperbound; i++) {
