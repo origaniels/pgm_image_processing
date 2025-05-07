@@ -11,9 +11,10 @@ struct matrix {
 };
 
 extern struct matrix *matrix_new(uint16_t n, uint16_t m);
-
 extern struct matrix *matrix_from(uint16_t n, uint16_t m, int32_t *weights);
 extern void matrix_from_inplace(struct matrix *res, uint16_t n, uint16_t m, int32_t *weights);
+
+extern int32_t matrix_get(struct matrix *a, int i, int j);
 
 extern struct matrix *matmult3x3(struct matrix *a, struct matrix *b, struct matrix *res);
 

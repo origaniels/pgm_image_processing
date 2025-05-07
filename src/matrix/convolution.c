@@ -158,20 +158,19 @@ int32_t convolve(struct matrix *a, struct matrix *b) {
   return res;
 }
 
-int32_t convolve_without_padding(struct matrix *a, struct matrix *b) {
-  assert(a && b);
+int32_t convolve_without_padding(struct matrix *a, struct matrix *kernel, int center_i, int center_j) {
+  assert(a && kernel);
 
-  assert(a->m == b->m);
-  assert(a->n == b->n);
+  assert(a->weights && kernel->weights);
 
-  assert(a->weights && b->weights);
-
+  int bound_n = kernel->n/2;
+  int bound_m = kernel->m/2;
   int32_t res = 0;
-  for (int i = 0; i<a->m; i++) {
-    for (int j = 0; j<a->n; j++) {
-      uint16_t a_idx = i*a->n + j;
-      uint16_t b_idx = (a->m-i-1)*a->n + (a->n-j-1);
-      res += a->weights[a_idx] * b->weights[b_idx];
+  for (int i = -bound_m; i<=bound_m; i++) {
+    for (int j = -bound_n; j<=bound_n; j++) {
+      int a_i = (center_i - i);
+      int a_j = (center_j - j);
+      res +=  kernel->weights[(i+bound_m) * kernel->n + j+bound_n] * matrix_get(a, a_i, a_j);
     }
   }
   return res;
@@ -215,16 +214,10 @@ struct matrix *convolve2d(struct matrix *a, struct matrix *kernel) {
 /*  Processes the 2dconvolution of matrix a by the provided kernel. 
     Processing is done block by block according to the sizes provided. */
 struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint16_t block_size_n, uint16_t block_size_m) {
-  /* expand a to fit the kernel everywhere */
-  uint16_t n_padding = kernel->n / 2;
-  uint16_t m_padding = kernel->m / 2;
-
   struct matrix *res = matrix_new(a->n, a->m);
 
   uint16_t num_blocks_n = a->n/block_size_n;
   uint16_t num_blocks_m = a->m/block_size_m;
-
-
 
   /* If there is a remainder, add an extra block. */
   uint16_t rem_n = a->n % block_size_n;
@@ -236,50 +229,18 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
     num_blocks_m++;
   }
 
-  uint32_t weights_to_allocate = a->m * a->n + num_blocks_m * num_blocks_n * 2 * m_padding * 2 * n_padding;
-
-  struct matrix *blocks = malloc(num_blocks_m * num_blocks_n * sizeof(struct matrix));
-  int32_t *blocks_weights = malloc(weights_to_allocate * sizeof(int32_t));
-
   for (int I = 0; I<num_blocks_m; I++) {
-    uint16_t cur_block_size_m = block_size_m;
-    if (rem_m && I==num_blocks_m-1) {
-      cur_block_size_m = rem_m;
-    }
-    uint16_t padded_block_size_m = cur_block_size_m + 2 * m_padding;
+    uint16_t cur_block_size_m = (I == num_blocks_m - 1) ? rem_m : block_size_m;
 
     for (int J = 0; J<num_blocks_n; J++) {
-      uint16_t cur_block_size_n = block_size_n;
-      int block_start_i = I * block_size_m;
-      /* multiply block_start_i by the j-length of a line. */
-      if (rem_n) {
-        block_start_i *= (num_blocks_n-1) * block_size_n + rem_n;
-        if (J==num_blocks_n-1) {
-          cur_block_size_n = rem_n;
-  
-        }
-      } else {
-        block_start_i *= num_blocks_n * block_size_n;
-      }
-      int block_start_j = J * block_size_n;
-      uint16_t padded_block_size_n = cur_block_size_n + 2 * n_padding;
+      uint16_t cur_block_size_n = (J == num_blocks_n - 1) ? rem_n : block_size_n;
 
-      struct matrix *block = extract_matrix_block_pad(a, I * block_size_m-m_padding, J * block_size_n-n_padding,
-                                                     padded_block_size_n, padded_block_size_m,
-                                                     &blocks[I * num_blocks_n +J], 
-                                                     &blocks_weights[block_start_i+block_start_j]);
-      
-      uint16_t i_upperbound = cur_block_size_m;
-      for (int i = 0; i < i_upperbound; i++) {
-        uint16_t j_upperbound = cur_block_size_n;
-
-        for (int j = 0; j < j_upperbound; j++) {
-          struct matrix *inner_block = extract_matrix_block(block, i, j, kernel->n, kernel->m);
-
+      for (int i = 0; i < cur_block_size_m; i++) {
+        for (int j = 0; j < cur_block_size_n; j++) {
           uint16_t res_i = I * block_size_m + i;
           uint16_t res_j = J * block_size_n + j;
 
-          res->weights[res_i*res->n + res_j] = convolve(inner_block, kernel);
+          res->weights[res_i*res->n + res_j] = convolve_without_padding(a, kernel, res_i, res_j);
         }
       }
     }

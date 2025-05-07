@@ -24,6 +24,9 @@ extract: matrix
 convolve: matrix
 	$(CC) $(CFLAGS) $(TEST_DIR)/convolve.c $(BIN)/matrix.o -o $(BIN)/convolve
 
+convolve_no_pad: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/convolve_no_pad.c $(MATRIX_OBJS) -o $(BIN)/convolve_no_pad
+
 convolve2d: matrix
 	$(CC) $(CFLAGS) $(TEST_DIR)/convolve2d.c $(BIN)/matrix.o -o $(BIN)/convolve2d
 

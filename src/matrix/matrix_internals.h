@@ -11,4 +11,6 @@ extern struct matrix *extract_matrix_block_pad(struct matrix *source_matrix, int
 
 extern void fill_section(struct matrix *m, int i_val, int j_val, int i_start,
                         int j_start, int n_size, int m_size);
+
+extern int32_t convolve_without_padding(struct matrix *a, struct matrix *kernel, int center_i, int center_j);
   

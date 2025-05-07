@@ -5,6 +5,28 @@
 
 #include "matrix_internals.h"
 
+
+/*  Returns element at position (i, j). 
+    If the coordinates are outside of the matrix, returns the nearest
+    weight. */
+inline int32_t matrix_get(struct matrix *a, int i, int j) {
+  if ((i > 0 && i < a->m) && (j > 0 && j < a->n)) {
+    return a->weights[i * a->n + j];
+  }
+
+  /* Coordinates are outside of a. */
+  i = i < 0 ? 0 : i;
+  j = j < 0 ? 0 : j;
+  
+  i = i >= a->m ? (a->m - 1) : i;
+  j = j >= a->n ? (a->n - 1) : j;
+
+  if (i>=a->m || j>=a->n) {
+    printf("AAAAAAAAAAAHHHHHHHHHH\n");
+  }
+  return a->weights[i * a->n + j];
+}
+
 struct matrix *matmult3x3(struct matrix *a, struct matrix *b, struct matrix *res) {
   assert(a && b && res);
 
