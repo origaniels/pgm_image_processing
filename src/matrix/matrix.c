@@ -21,9 +21,6 @@ inline int32_t matrix_get(struct matrix *a, int i, int j) {
   i = i >= a->m ? (a->m - 1) : i;
   j = j >= a->n ? (a->n - 1) : j;
 
-  if (i>=a->m || j>=a->n) {
-    printf("AAAAAAAAAAAHHHHHHHHHH\n");
-  }
   return a->weights[i * a->n + j];
 }
 

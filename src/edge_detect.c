@@ -6,7 +6,7 @@
 
 #define NUM_FILTERS 3
 #ifndef BLOCK_SIZE
-#define BLOCK_SIZE 200
+#define BLOCK_SIZE 3000
 #endif
 
 enum filter_type {

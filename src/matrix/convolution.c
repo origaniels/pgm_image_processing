@@ -158,6 +158,10 @@ int32_t convolve(struct matrix *a, struct matrix *b) {
   return res;
 }
 
+/*  Computes the matrix convolution of the provided kernel and
+    the sub-block of a with the same size as the kernel centered
+    on center_i, center_j.
+    The kernel is assumed to have odd dimensions. */
 int32_t convolve_without_padding(struct matrix *a, struct matrix *kernel, int center_i, int center_j) {
   assert(a && kernel);
 
@@ -180,32 +184,12 @@ int32_t convolve_without_padding(struct matrix *a, struct matrix *kernel, int ce
     kernel is slid over a and performs matrix convolution on each
     sub_block of a. */
 struct matrix *convolve2d(struct matrix *a, struct matrix *kernel) {
-  uint16_t n_padding = kernel->n / 2;
-  uint16_t m_padding = kernel->m / 2;
-
   struct matrix *res = matrix_new(a->n, a->m);
-
-  for (int i = 0; i<res->m; i++) {
-
-    /* left side */
-    for (int j = 0; j<n_padding; j++) {
-      struct matrix *block = extract_matrix_block_pad(a, i-m_padding, j-n_padding, kernel->n, kernel->m, NULL, NULL);
-      res->weights[i*res->n + j] = convolve(block, kernel);
-    }
-
-    /* right side */
-    for (int j = res->n-n_padding; j<res->n; j++) {
-      struct matrix *block = extract_matrix_block_pad(a, i-m_padding, j-n_padding, kernel->n, kernel->m, NULL, NULL);
-      res->weights[i*res->n + j] = convolve(block, kernel);
-    }
-  }
-
 
   /* inner values*/
   for (int i = 0; i<res->m; i++) {
-    for (int j = n_padding; j<res->n-n_padding; j++) {
-      struct matrix *block = extract_matrix_block_pad(a, i-m_padding, j-n_padding, kernel->n, kernel->m, NULL, NULL);
-      res->weights[i*res->n + j] = convolve(block, kernel);
+    for (int j = 0; j<res->n; j++) {
+      res->weights[i*res->n + j] = convolve_without_padding(a, kernel, i, j);
     }
   }
   return res;
