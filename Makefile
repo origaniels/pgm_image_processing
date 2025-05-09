@@ -23,3 +23,7 @@ blur: 	$(MATRIX_OBJ_DEPS) pgm
 edge: 	$(MATRIX_OBJ_DEPS) pgm
 	$(CC) $(CFLAGS) src/edge_detect.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/edge_detect
 
+big: 	$(MATRIX_OBJ_DEPS) pgm
+	$(CC) $(CFLAGS) src/big_generator.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/big_generator
+
+

@@ -186,7 +186,6 @@ int32_t convolve_without_padding(struct matrix *a, struct matrix *kernel, int ce
 struct matrix *convolve2d(struct matrix *a, struct matrix *kernel) {
   struct matrix *res = matrix_new(a->n, a->m);
 
-  /* inner values*/
   for (int i = 0; i<res->m; i++) {
     for (int j = 0; j<res->n; j++) {
       res->weights[i*res->n + j] = convolve_without_padding(a, kernel, i, j);
@@ -213,11 +212,12 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
     num_blocks_m++;
   }
 
-  for (int I = 0; I<num_blocks_m; I++) {
-    uint16_t cur_block_size_m = (I == num_blocks_m - 1) ? rem_m : block_size_m;
-
-    for (int J = 0; J<num_blocks_n; J++) {
-      uint16_t cur_block_size_n = (J == num_blocks_n - 1) ? rem_n : block_size_n;
+  /*  Process blocks column-first for better cache performance. */
+  for (int J = 0; J<num_blocks_n; J++) {
+    uint16_t cur_block_size_n = (J == num_blocks_n - 1) && rem_n ? rem_n : block_size_n;
+          
+    for (int I = 0; I<num_blocks_m; I++) {
+      uint16_t cur_block_size_m = (I == num_blocks_m - 1) && rem_n ? rem_m : block_size_m;
 
       for (int i = 0; i < cur_block_size_m; i++) {
         for (int j = 0; j < cur_block_size_n; j++) {
