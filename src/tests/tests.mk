@@ -1,32 +1,32 @@
 
 
-print: 	matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/prettyprint.c $(BIN)/matrix.o -o $(BIN)/prettyprint
+print: 	$(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/prettyprint.c $(MATRIX_OBJS) -o $(BIN)/prettyprint
 
 open: 	pgm
-	$(CC) $(CFLAGS) $(TEST_DIR)/openimage.c $(BIN)/matrix.o $(BIN)/pgm.o -o $(BIN)/openimage
+	$(CC) $(CFLAGS) $(TEST_DIR)/openimage.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/openimage
 
 close: 	pgm
-	$(CC) $(CFLAGS) $(TEST_DIR)/copy_image.c $(BIN)/matrix.o $(BIN)/pgm.o -o $(BIN)/copy_image
+	$(CC) $(CFLAGS) $(TEST_DIR)/copy_image.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/copy_image
 
-mult33: matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/mult3x3.c $(BIN)/matrix.o -o $(BIN)/mult33
+mult33: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/mult3x3.c $(MATRIX_OBJS) -o $(BIN)/mult33
 
-equals: matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/equals.c $(BIN)/matrix.o -o $(BIN)/equals
+equals: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/equals.c $(MATRIX_OBJS) -o $(BIN)/equals
 
-pad: matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/padding.c $(BIN)/matrix.o -o $(BIN)/padding
+pad: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/padding.c $(MATRIX_OBJS) -o $(BIN)/padding
 
-extract: matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/extract_matrix_block.c $(BIN)/matrix.o -o $(BIN)/extract_matrix_block
+extract: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/extract_matrix_block.c $(MATRIX_OBJS) -o $(BIN)/extract_matrix_block
 
-convolve: matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/convolve.c $(BIN)/matrix.o -o $(BIN)/convolve
+convolve: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/convolve.c $(MATRIX_OBJS) -o $(BIN)/convolve
 
 convolve_no_pad: $(MATRIX_OBJ_DEPS)
 	$(CC) $(CFLAGS) $(TEST_DIR)/convolve_no_pad.c $(MATRIX_OBJS) -o $(BIN)/convolve_no_pad
 
-convolve2d: matrix
-	$(CC) $(CFLAGS) $(TEST_DIR)/convolve2d.c $(BIN)/matrix.o -o $(BIN)/convolve2d
+convolve2d: $(MATRIX_OBJ_DEPS)
+	$(CC) $(CFLAGS) $(TEST_DIR)/convolve2d.c $(MATRIX_OBJS) -o $(BIN)/convolve2d
 
