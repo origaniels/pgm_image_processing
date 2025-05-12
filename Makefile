@@ -1,7 +1,7 @@
 CFLAGS=-Isrc -O3 -pg -g3 -fsanitize=signed-integer-overflow 
 LDFLAGS=-lm
 BIN=bin
-CC=gcc
+CC?=gcc
 
 SOURCE_DIR=src
 MATRIX_DIR=$(SOURCE_DIR)/matrix
