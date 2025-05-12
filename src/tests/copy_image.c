@@ -1,4 +1,4 @@
-#include "pgm.h"
+#include "include/pgm.h"
 
 int main() {
   const char *name = "images/grim.pgm";
