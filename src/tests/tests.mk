@@ -1,32 +1,32 @@
 
 
 print: 	$(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/prettyprint.c $(MATRIX_OBJS) -o $(BIN)/prettyprint
+	$(CC) $(CFLAGS) $(TEST_DIR)/prettyprint.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/prettyprint
 
 open: 	pgm
-	$(CC) $(CFLAGS) $(TEST_DIR)/openimage.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/openimage
+	$(CC) $(CFLAGS) $(TEST_DIR)/openimage.c $(MATRIX_OBJS) $(BIN)/pgm.o $(LDFLAGS) -o $(BIN)/openimage
 
 close: 	pgm
-	$(CC) $(CFLAGS) $(TEST_DIR)/copy_image.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/copy_image
+	$(CC) $(CFLAGS) $(TEST_DIR)/copy_image.c $(MATRIX_OBJS) $(BIN)/pgm.o $(LDFLAGS) -o $(BIN)/copy_image
 
 mult33: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/mult3x3.c $(MATRIX_OBJS) -o $(BIN)/mult33
+	$(CC) $(CFLAGS) $(TEST_DIR)/mult3x3.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/mult33
 
 equals: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/equals.c $(MATRIX_OBJS) -o $(BIN)/equals
+	$(CC) $(CFLAGS) $(TEST_DIR)/equals.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/equals
 
 pad: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/padding.c $(MATRIX_OBJS) -o $(BIN)/padding
+	$(CC) $(CFLAGS) $(TEST_DIR)/padding.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/padding
 
 extract: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/extract_matrix_block.c $(MATRIX_OBJS) -o $(BIN)/extract_matrix_block
+	$(CC) $(CFLAGS) $(TEST_DIR)/extract_matrix_block.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/extract_matrix_block
 
 convolve: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/convolve.c $(MATRIX_OBJS) -o $(BIN)/convolve
+	$(CC) $(CFLAGS) $(TEST_DIR)/convolve.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/convolve
 
 convolve_no_pad: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/convolve_no_pad.c $(MATRIX_OBJS) -o $(BIN)/convolve_no_pad
+	$(CC) $(CFLAGS) $(TEST_DIR)/convolve_no_pad.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/convolve_no_pad
 
 convolve2d: $(MATRIX_OBJ_DEPS)
-	$(CC) $(CFLAGS) $(TEST_DIR)/convolve2d.c $(MATRIX_OBJS) -o $(BIN)/convolve2d
+	$(CC) $(CFLAGS) $(TEST_DIR)/convolve2d.c $(MATRIX_OBJS) $(LDFLAGS) -o $(BIN)/convolve2d
 

@@ -1,4 +1,5 @@
-CFLAGS=-Isrc -O3 -pg -g3 -fsanitize=signed-integer-overflow -lm 
+CFLAGS=-Isrc -O3 -pg -g3 -fsanitize=signed-integer-overflow 
+LDFLAGS=-lm
 BIN=bin
 CC=gcc
 
@@ -21,9 +22,9 @@ blur: 	$(MATRIX_OBJ_DEPS) pgm
 	$(CC) $(CFLAGS) src/blur.c $(BIN)/matrix.o $(BIN)/pgm.o
 
 edge: 	$(MATRIX_OBJ_DEPS) pgm
-	$(CC) $(CFLAGS) src/edge_detect.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/edge_detect
+	$(CC) $(CFLAGS) src/edge_detect.c $(MATRIX_OBJS) $(BIN)/pgm.o $(LDFLAGS) -o $(BIN)/edge_detect
 
 big: 	$(MATRIX_OBJ_DEPS) pgm
-	$(CC) $(CFLAGS) src/big_generator.c $(MATRIX_OBJS) $(BIN)/pgm.o -o $(BIN)/big_generator
+	$(CC) $(CFLAGS) src/big_generator.c $(MATRIX_OBJS) $(BIN)/pgm.o $(LDFLAGS) -o $(BIN)/big_generator
 
 

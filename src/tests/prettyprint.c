@@ -1,4 +1,4 @@
-#include "matrix.h"
+#include "include/matrix.h"
 
 int main() {
   uint16_t n = 4;

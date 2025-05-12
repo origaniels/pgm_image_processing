@@ -1,4 +1,4 @@
-#include <matrix.h>
+#include "matrix/matrix_internals.h"
 #include <stdio.h>
 
 int main() {
