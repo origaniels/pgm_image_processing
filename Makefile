@@ -1,4 +1,4 @@
-CFLAGS=-Isrc -O3 -pg -g3 -fsanitize=signed-integer-overflow 
+CFLAGS=-Isrc -O3 -pg -g3 -fsanitize=signed-integer-overflow -fopenmp -fdump-tree-ompexp
 LDFLAGS=-lm
 BIN=bin
 CC?=gcc

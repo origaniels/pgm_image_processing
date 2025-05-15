@@ -128,7 +128,13 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
     num_blocks_m++;
   }
 
+  
   /*  Process blocks column-first for better cache performance. */
+  int num_threads = block_size_n;
+  struct matrix star_a = *a;
+  struct matrix star_res = *res;
+  #pragma omp target map(to: a, star_a.weights[:star_a.n*star_a.m]) map(from: star_res.weights[:star_res.n*star_res.m])
+  #pragma omp parallel for num_threads(num_threads)
   for (int J = 0; J<num_blocks_n; J++) {
     uint16_t cur_block_size_n = (J == num_blocks_n - 1) && rem_n ? rem_n : block_size_n;
 
@@ -137,7 +143,7 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
         uint16_t res_i = i;
         uint16_t res_j = J * block_size_n + j;
 
-        res->weights[res_i*res->n + res_j] = convolve_without_padding(a, kernel, res_i, res_j);
+        res->weights[res_i*a->n + res_j] = convolve_without_padding(a, kernel, res_i, res_j);
       }
     }
   }
