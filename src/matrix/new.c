@@ -29,3 +29,8 @@ void matrix_from_inplace(struct matrix *res, uint16_t n, uint16_t m, int32_t *we
   res->m = m;
   res->weights = weights;
 }
+
+void matrix_free(struct matrix *a) {
+  free(a->weights);
+  free(a);
+}
