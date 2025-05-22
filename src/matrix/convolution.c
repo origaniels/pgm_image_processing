@@ -129,23 +129,50 @@ struct matrix *convolve2d_blocked(struct matrix *a, struct matrix *kernel, uint1
   }
 
   
-  /*  Process blocks column-first for better cache performance. */
-  int num_threads = block_size_n;
+  int num_threads = 16;
+  int num_teams = 10;
+  
   struct matrix star_a = *a;
   struct matrix star_res = *res;
-  #pragma omp target map(to: a, star_a.weights[:star_a.n*star_a.m]) map(from: star_res.weights[:star_res.n*star_res.m])
-  #pragma omp parallel for num_threads(num_threads)
-  for (int J = 0; J<num_blocks_n; J++) {
-    uint16_t cur_block_size_n = (J == num_blocks_n - 1) && rem_n ? rem_n : block_size_n;
-
-    for (int i = 0; i < a->m; i++) {
-      for (int j = 0; j < cur_block_size_n; j++) {
-        uint16_t res_i = i;
-        uint16_t res_j = J * block_size_n + j;
-
-        res->weights[res_i*a->n + res_j] = convolve_without_padding(a, kernel, res_i, res_j);
-      }
+  struct matrix star_kernel = *kernel;
+  #pragma omp target data map(to: star_a, star_kernel, star_a.weights[:star_a.n*star_a.m], star_kernel.weights[:star_kernel.n*star_kernel.m]) map(from: star_res, star_res.weights[:star_res.n*star_res.m])
+  {
+    int blocks_per_team = num_blocks_n/num_teams;
+    if (!blocks_per_team) {
+      blocks_per_team = 1;
     }
+
+    int ub = num_blocks_n;
+    int team_num = 0;
+    
+    for (team_num = 0; team_num<num_teams; team_num++) {
+      ub = (team_num+1)*blocks_per_team>num_blocks_n ? num_blocks_n : (team_num+1)*blocks_per_team;
+      if (team_num==num_teams-1) {
+        ub = num_blocks_n;
+      }
+      
+      
+      /*  Process blocks column-first for better cache performance. */
+      #pragma omp target nowait
+      for (int J = team_num*blocks_per_team; J<ub; J++) {
+        {
+          uint16_t cur_block_size_n = (J == num_blocks_n - 1) && rem_n ? rem_n : block_size_n;
+
+          #pragma omp parallel for num_threads(num_threads)
+          for (int i = 0; i < star_a.m; i++) {
+
+            for (int j = 0; j < cur_block_size_n; j++) {
+              uint16_t res_i = i;
+              uint16_t res_j = J * block_size_n + j;
+              star_res.weights[res_i*star_a.n + res_j] = convolve_without_padding(&star_a, &star_kernel, res_i, res_j);
+            }
+          }
+        }
+      }
+      if (ub == num_blocks_n) break;
+    }
+
+    #pragma omp taskwait
   }
 
   return res;
